@@ -2,8 +2,35 @@ const { checkRateLimit } = require('../aryan/rateLimit');
 const { createChat } = require('../aryan/chat');
 const { addListener } = require('../aryan/listener');
 const config = require('../config.json');
+const fs = require('fs').promises;
+const path = require('path');
+
+global.config = config;
 
 const answerCallbacks = new Map();
+const texts = {};
+
+async function loadTexts() {
+  try {
+    const filePath = path.join(__dirname, '..', 'stats', 'texts.txt');
+    const data = await fs.readFile(filePath, 'utf8');
+    data.split('\n').forEach(line => {
+      const trimmedLine = line.trim();
+      if (trimmedLine && !trimmedLine.startsWith('#')) {
+        const parts = trimmedLine.split('=');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const value = parts.slice(1).join('=').trim();
+          texts[key] = value;
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error loading texts.txt:', error.message);
+  }
+}
+
+loadTexts();
 
 function addAnswerCallback(buttonId, callback) {
   answerCallbacks.set(buttonId, callback);
@@ -15,11 +42,6 @@ function setupMessageHandler(bot, c) {
     if (!msg.from) {
       console.log('Ignoring message with no sender information');
       return;
-    }
-
-    if (global.isRestarting && msg.text !== `${config.prefix}restart`) {
-        console.log(`Ignoring message "${msg.text}" because bot is restarting.`);
-        return;
     }
 
     const chatId = msg.chat.id;
@@ -56,13 +78,23 @@ function setupMessageHandler(bot, c) {
         console.log(`Reply callback executed for message ${msg.reply_to_message.message_id}`);
       } catch (error) {
         console.error(`Error in reply callback for message ${msg.reply_to_message.message_id}:`, error);
-        await chat.reply('Error processing reply.');
+        await chat.reply(texts.aryan_reply_err || 'Error processing reply.');
       }
       return;
     }
 
-    const command = global.commands.get(commandName);
+    let command;
+    command = global.commands.get(commandName);
 
+    if (!command) {
+        for (const cmd of global.commands.values()) {
+            if (cmd.aliases && cmd.aliases.includes(commandName)) {
+                command = cmd;
+                break;
+            }
+        }
+    }
+    
     if (command) {
       if (command.prefix === true && !hasPrefix) {
         console.log(`Command ${commandName} ignored: requires prefix`);
@@ -75,49 +107,53 @@ function setupMessageHandler(bot, c) {
 
       if (command.admin && !config.admins.includes(userId)) {
         console.log(`Command ${commandName} blocked: user ${userId} is not admin`);
-        await chat.reply('Admin access required.');
+        await chat.reply(texts.admin || 'Admin access required.');
         return;
       }
       if (command.vip && !config.vips.includes(userId) && !config.admins.includes(userId)) {
         console.log(`Command ${commandName} blocked: user ${userId} is not VIP or admin`);
-        await chat.reply('VIP access required.');
+        await chat.reply(texts.aryan_vip || 'VIP access required.');
         return;
       }
 
       if (!checkRateLimit(userId, commandName)) {
         console.log(`Command ${commandName} blocked: rate limit exceeded for user ${userId}`);
-        await chat.reply('Slow down! Try again in a moment.');
+        await chat.reply(texts.aryan_slow || 'Slow down! Try again in a moment.');
         return;
       }
 
       try {
         const initialize = command.xyz;
         if (typeof initialize === 'function') {
-            await initialize({
-              bot,
-              chat,
-              msg,
-              args,
-              chatId,
-              userId,
-              config,
-              addListener,
+            await initialize({ 
+              bot, 
+              chat, 
+              msg, 
+              args, 
+              chatId, 
+              userId, 
+              config, 
+              addListener, 
               addAnswerCallback,
-              commands: global.commands,
-              restartBot: global.restartBot
+              commands: global.commands 
             });
             console.log(`Command ${commandName} executed by user ${userId}`);
         } else {
             console.error(`Command ${commandName} has no executable 'xyz' function.`);
-            await chat.reply('Error: Command not properly configured.');
+            await chat.reply(texts.aryan_error || 'Error: Command not properly configured.');
         }
       } catch (error) {
         console.error(`Error in command ${commandName}:`, error);
-        await chat.reply(`Error executing command \`${commandName}\`.\nReason: \`${error.message}\``);
+        const errorMessage = (texts.aryan_exec || 'Error executing command `{commandName}`.\nReason: `{errorMessage}`')
+          .replace('{commandName}', commandName)
+          .replace('{errorMessage}', error.message);
+        await chat.reply(errorMessage);
       }
     } else if (hasPrefix) {
       console.log(`Unknown command: ${commandName}`);
-      await chat.reply('Please enter a command after the prefix or type help to see available commands.');
+      const missingPrefixMessage = (texts.aryan_prefix || 'Please enter a command after the prefix or type {prefix}help to see available commands.')
+        .replace('{prefix}', config.prefix);
+      await chat.reply(missingPrefixMessage);
     } else {
       for (const listener of global.listeners) {
         if (listener.condition(msg)) {
@@ -144,17 +180,17 @@ function setupMessageHandler(bot, c) {
     if (answerCallbacks.has(callbackData)) {
       const callback = answerCallbacks.get(callbackData);
       try {
-        await callback({ bot, chat, query, chatId, userId, config, restartBot: global.restartBot });
+        await callback({ bot, chat, query, chatId, userId, config });
         console.log(`Answer callback executed for button ${callbackData} by user ${userId}`);
       } catch (error) {
         console.error(`Error in answer callback ${callbackData}:`, error);
-        await chat.reply('Error processing button action.');
+        await chat.reply(texts.aryan_button_err || 'Error processing button action.');
       }
     } else {
       console.log(`No callback found for button ${callbackData}`);
-      await chat.reply('Unknown button action.');
+      await chat.reply(texts.aryan_unknown_button || 'Unknown button action.');
     }
   });
 }
 
-module.exports = { setupMessageHandler, addAnswerCallback };
+module.exports = { setupMessageHandler };
