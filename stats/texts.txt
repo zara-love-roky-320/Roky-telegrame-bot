@@ -1,0 +1,9 @@
+admin=Admin access required.
+aryan_vip=VIP access required.
+aryan_slow=Slow down! Try again in a moment.
+aryan_error=Error: Command not properly configured.
+aryan_exec=Error executing command {commandName}\nReason: {errorMessage}
+aryan_prefix=Please enter a command after the prefix or type {prefix}help to see available commands.
+aryan_reply_err=Error processing reply.
+aryan_button_err=Error processing button action.
+aryan_unknown_button=Unknown button action.
