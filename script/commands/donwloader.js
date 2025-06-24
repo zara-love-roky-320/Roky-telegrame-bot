@@ -7,6 +7,8 @@ module.exports = {
   vip: false,
   author: 'ArYAN',
   version: '1.0.0',
+
+  
   async xyz({ chat, msg, args }) {
     const url = args[0];
 
