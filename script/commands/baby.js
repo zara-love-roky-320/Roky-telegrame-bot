@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const baseApiUrl = "https://noobs-api.top/dipto/baby";
+const baseApiUrl = "${global.api.sim}baby";
 
 module.exports = {
   name: "baby",
