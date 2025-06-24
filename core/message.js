@@ -2,7 +2,6 @@ const { checkRateLimit } = require('../aryan/rateLimit');
 const { createChat } = require('../aryan/chat');
 const { addListener } = require('../aryan/listener');
 const config = require('../config.json');
-global.config = config;
 
 const answerCallbacks = new Map();
 
@@ -16,6 +15,11 @@ function setupMessageHandler(bot, c) {
     if (!msg.from) {
       console.log('Ignoring message with no sender information');
       return;
+    }
+
+    if (global.isRestarting && msg.text !== `${config.prefix}restart`) {
+        console.log(`Ignoring message "${msg.text}" because bot is restarting.`);
+        return;
     }
 
     const chatId = msg.chat.id;
@@ -34,7 +38,6 @@ function setupMessageHandler(bot, c) {
     }
     console.log(`${c.green}  Message: ${text}`);
     console.log(`${c.cyan}───────────────────────────────────────${c.reset}`);
-
 
     let commandName, args;
     if (hasPrefix) {
@@ -59,7 +62,7 @@ function setupMessageHandler(bot, c) {
     }
 
     const command = global.commands.get(commandName);
-    
+
     if (command) {
       if (command.prefix === true && !hasPrefix) {
         console.log(`Command ${commandName} ignored: requires prefix`);
@@ -90,17 +93,18 @@ function setupMessageHandler(bot, c) {
       try {
         const initialize = command.xyz;
         if (typeof initialize === 'function') {
-            await initialize({ 
-              bot, 
-              chat, 
-              msg, 
-              args, 
-              chatId, 
-              userId, 
-              config, 
-              addListener, 
+            await initialize({
+              bot,
+              chat,
+              msg,
+              args,
+              chatId,
+              userId,
+              config,
+              addListener,
               addAnswerCallback,
-              commands: global.commands 
+              commands: global.commands,
+              restartBot: global.restartBot
             });
             console.log(`Command ${commandName} executed by user ${userId}`);
         } else {
@@ -140,7 +144,7 @@ function setupMessageHandler(bot, c) {
     if (answerCallbacks.has(callbackData)) {
       const callback = answerCallbacks.get(callbackData);
       try {
-        await callback({ bot, chat, query, chatId, userId, config });
+        await callback({ bot, chat, query, chatId, userId, config, restartBot: global.restartBot });
         console.log(`Answer callback executed for button ${callbackData} by user ${userId}`);
       } catch (error) {
         console.error(`Error in answer callback ${callbackData}:`, error);
@@ -153,4 +157,4 @@ function setupMessageHandler(bot, c) {
   });
 }
 
-module.exports = { setupMessageHandler };
+module.exports = { setupMessageHandler, addAnswerCallback };
