@@ -39,7 +39,7 @@ module.exports = {
   admin: true,
   vip: false,
   role: 2,
-  author: "ArYAN (Telegram Port)",
+  author: "ArYAN",
   version: "1.0.0",
   description: "Manage bot administrators: add, remove, list",
   usage: "!admin add [reply/mention/ID] | !admin remove [reply/mention/ID] | !admin list",
