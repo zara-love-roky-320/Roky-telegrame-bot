@@ -18,29 +18,13 @@
 
 ## 📁 Project Structure
 
-ARYAN-TELEGRAM-BOT/
-├── index.js                  # Entry point of the bot 
-├── config.json               # Stores bot token and config 
-├── package.json              # NPM dependencies and metadata
-├── aryan/                    # Core logic & helpers 
-│   ├── chat.js 
-│   ├── listener.js 
-│   ├── logger.js 
-│   └── rateLimit.js
-├── core/                     # Low-level bot internals 
-│   ├── edit.js 
-│   ├── load.js 
-│   └── message.js
-├── script/ 
-│   └── commands/             # All user-accessible bot commands 
-│       ├── admin.js 
-│       ├── baby.js 
-│       ├── cmd.js
-│       ├── downloader.js 
-│       ├── eval.js 
-│       ├── help.js 
-│       ├── ping.js 
-│       └── prefix.js
+ARYAN-TELEGRAM-BOT/ ├── index.js                  # Entry point of the bot ├── config.json               # Stores bot token and config ├── package.json              # NPM dependencies and metadata
+
+├── aryan/                    # Core logic & helpers │   ├── chat.js │   ├── listener.js │   ├── logger.js │   └── rateLimit.js
+
+├── core/                     # Low-level bot internals │   ├── edit.js │   ├── load.js │   └── message.js
+
+├── script/ │   └── commands/             # All user-accessible bot commands │       ├── admin.js │       ├── baby.js │       ├── cmd.js │       ├── downloader.js │       ├── eval.js │       ├── help.js │       ├── ping.js │       └── prefix.js
 
 ---
 
