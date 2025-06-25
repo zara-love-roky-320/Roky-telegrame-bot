@@ -44,16 +44,14 @@ Open config.json and add your Telegram bot token:
 {
   "token": "YOUR_BOT_TOKEN"
 }
-
 ```
 
 4. Run the bot
 
 ```
 node index
-
-
 ```
 
 ---
 
+**developer by itz Aryan**
