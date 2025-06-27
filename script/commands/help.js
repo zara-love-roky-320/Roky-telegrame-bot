@@ -58,9 +58,9 @@ module.exports = {
 ╭──────────────◊
 │ » Total commands: ${[...new Set(global.commands.values())].length}
 │ » A Powerful Telegram bot
-│ » itz Aryan
+│ » ♡Alvee Evan Roky♡
 ╰──────────◊
-「 xyz bot 」
+「 ♡Your Baby♡ 」
     `.trim();
 
     await chat.reply(msg);
